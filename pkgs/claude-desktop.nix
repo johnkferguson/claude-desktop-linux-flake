@@ -13,7 +13,7 @@
   perl
 }: let
   pname = "claude-desktop";
-  version = "0.13.19";
+  version = "0.13.37";
   srcExe = fetchurl {
     # NOTE: `?v=0.10.0` doesn't actually request a specific version. It's only being used here as a cache buster.
     url = "https://storage.googleapis.com/osprey-downloads-c02f6a0d-347c-492b-a752-3e0651722e97/nest-win-x64/Claude-Setup-x64.exe?v=${version}";
@@ -59,7 +59,15 @@ in
 
       # Extract installer exe, and nupkg within it
       7z x -y ${srcExe}
-      7z x -y "AnthropicClaude-${version}-full.nupkg"
+
+      # Find the actual nupkg file (version might differ from installer version)
+      NUPKG_FILE=$(find . -name "AnthropicClaude-*-full.nupkg" | head -1)
+      if [ -z "$NUPKG_FILE" ]; then
+        echo "Error: Could not find AnthropicClaude nupkg file"
+        exit 1
+      fi
+      echo "Found nupkg file: $NUPKG_FILE"
+      7z x -y "$NUPKG_FILE"
 
       # Package the icons from claude.exe
       wrestool -x -t 14 lib/net45/claude.exe -o claude.ico
